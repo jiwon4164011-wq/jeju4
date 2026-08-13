@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="SafeSchool AI - 학교 안전 신고 및 관리 웹앱" />
+<meta name="theme-color" content="#2563eb" />
+<title>SafeSchool AI · 학교 안전 신고 관리</title>
+<style>
+/* ============================================================
+   SafeSchool AI — 단일 파일 웹앱
+   ============================================================ */
+:root{
+  --bg:#f4f6fb;
+  --panel:#ffffff;
+  --panel-2:#f8fafc;
+  --line:#e5e9f2;
+  --text:#111827;
+  --muted:#6b7280;
+  --brand:#2563eb;
+  --brand-d:#1d4ed8;
+  --brand-soft:#e8f0ff;
+  --ok:#16a34a;
+  --warn:#d97706;
+  --danger:#dc2626;
+  --info:#0891b2;
+  --radius:16px;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+  --shadow-lg:0 12px 40px rgba(16,24,40,.14);
+  --sev-1:#16a34a; --sev-2:#ca8a04; --sev-3:#ea580c; --sev-4:#dc2626;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+h1,h2,h3,h4{margin:0;line-height:1.3}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d3d9e6;border-radius:20px;border:3px solid var(--bg)}
+
+/* ---------- 레이아웃 ---------- */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:40;background:rgba(255,255,255,.88);
+  backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);
+}
+.topbar-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.4px;font-size:17px}
+.logo .mark{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#2563eb,#22c1dc);color:#fff;font-size:15px;
+  box-shadow:0 4px 12px rgba(37,99,235,.35)
+}
+.logo small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:0}
+.spacer{flex:1}
+.navtabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navtabs::-webkit-scrollbar{display:none}
+.navtabs a{
+  padding:8px 13px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap
+}
+.navtabs a:hover{background:var(--panel-2);color:var(--text)}
+.navtabs a.on{background:var(--brand-soft);color:var(--brand-d)}
+.who{display:flex;align-items:center;gap:9px}
+.avatar{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;
+  background:var(--brand-soft);color:var(--brand-d);flex:none
+}
+.who .nm{font-size:13px;font-weight:700;line-height:1.2}
+.who .rl{font-size:11px;color:var(--muted)}
+main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:20px 16px 96px}
+
+/* ---------- 공통 컴포넌트 ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card.pad{padding:18px}
+.page-head{display:flex;align-items:flex-end;gap:12px;margin:4px 0 16px;flex-wrap:wrap}
+.page-head h2{font-size:22px;letter-spacing:-.5px}
+.page-head p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.grid{display:grid;gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
+  font-weight:700;font-size:14px;transition:.15s;white-space:nowrap
+}
+.btn:hover{background:var(--panel-2)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.28)}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.danger{background:#fff;border-color:#fecaca;color:var(--danger)}
+.btn.danger:hover{background:#fef2f2}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--text)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.field{margin-bottom:15px}
+.field > label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+.field .hint{font-size:12px;color:var(--muted);font-weight:500;margin-left:4px}
+.input,.select,.textarea{
+  width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);
+  outline:none;transition:.15s
+}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.textarea{min-height:120px;resize:vertical;line-height:1.6}
+.select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:38px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  padding:9px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);
+  font-size:13.5px;font-weight:600;transition:.15s
+}
+.chip:hover{border-color:#c7d2fe}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty .ico{font-size:40px;margin-bottom:10px}
+.tag{display:inline-block;padding:3px 9px;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--muted)}
+
+/* 상태 / 위험도 색상 */
+.s-접수{background:#eef2ff;color:#4338ca}
+.s-확인{background:#e0f2fe;color:#0369a1}
+.s-처리중{background:#fef3c7;color:#b45309}
+.s-처리완료{background:#dcfce7;color:#15803d}
+.s-반려{background:#f1f5f9;color:#64748b}
+.v-1{background:#dcfce7;color:#15803d}
+.v-2{background:#fef9c3;color:#a16207}
+.v-3{background:#ffedd5;color:#c2410c}
+.v-4{background:#fee2e2;color:#b91c1c}
+
+/* ---------- 모드 전환 (학생/관리자) ---------- */
+.modesw{display:flex;gap:3px;background:var(--panel-2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.modesw button{padding:7px 12px;border:0;background:transparent;border-radius:9px;font-weight:700;font-size:13px;color:var(--muted);white-space:nowrap}
+.modesw button.on{background:#fff;color:var(--brand-d);box-shadow:var(--shadow)}
+
+/* ---------- 통계 타일 ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow)}
+.stat .lb{font-size:12.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.stat .vl{font-size:27px;font-weight:800;letter-spacing:-1px;margin-top:5px}
+.stat .sub{font-size:12px;color:var(--muted)}
+.stat.accent{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-color:transparent}
+.stat.accent .lb,.stat.accent .sub{color:rgba(255,255,255,.85)}
+
+/* ---------- 신고 리스트 ---------- */
+.rlist{display:grid;gap:11px}
+.ritem{
+  display:flex;gap:13px;padding:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);transition:.15s;text-align:left;width:100%;cursor:pointer
+}
+.ritem:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg);border-color:#c7d7fb}
+.ritem .thumb{
+  width:72px;height:72px;border-radius:12px;flex:none;object-fit:cover;background:var(--panel-2);
+  display:grid;place-items:center;font-size:26px;color:#9aa4b8;border:1px solid var(--line)
+}
+.ritem .body{flex:1;min-width:0}
+.ritem .tt{font-weight:700;font-size:15px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ritem .mt{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px}
+.ritem .bd{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sev-bar{width:4px;border-radius:4px;flex:none}
+
+/* ---------- 안전지도 ---------- */
+.map-frame{
+  position:relative;width:100%;aspect-ratio:16/10;min-height:330px;border-radius:var(--radius);overflow:hidden;
+  background:
+    linear-gradient(rgba(255,255,255,.6),rgba(255,255,255,.6)),
+    repeating-linear-gradient(0deg,#e6ebf5 0 1px,transparent 1px 34px),
+    repeating-linear-gradient(90deg,#e6ebf5 0 1px,transparent 1px 34px),
+    #eef2f9;
+  border:1px solid var(--line)
+}
+.zone{
+  position:absolute;border-radius:12px;border:2px solid #cbd5e1;background:rgba(255,255,255,.86);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:12.5px;font-weight:700;color:#475569;text-align:center;padding:4px;transition:.15s;cursor:pointer;overflow:hidden
+}
+.zone:hover{transform:scale(1.03);box-shadow:var(--shadow-lg);z-index:5}
+.zone.on{outline:3px solid var(--brand);outline-offset:2px}
+.zone .cnt{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:#fff;border:1px solid currentColor}
+.zone .ico{font-size:17px;line-height:1}
+.zone.lv0{border-color:#cbd5e1}
+.zone.lv1{border-color:var(--sev-1);background:rgba(22,163,74,.13);color:#14532d}
+.zone.lv2{border-color:var(--sev-2);background:rgba(202,138,4,.15);color:#713f12}
+.zone.lv3{border-color:var(--sev-3);background:rgba(234,88,12,.17);color:#7c2d12}
+.zone.lv4{border-color:var(--sev-4);background:rgba(220,38,38,.19);color:#7f1d1d;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{box-shadow:0 0 0 9px rgba(220,38,38,0)}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend i{width:12px;height:12px;border-radius:4px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+/* ---------- 차트 ---------- */
+.donut-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut{width:148px;height:148px;border-radius:50%;flex:none;position:relative;display:grid;place-items:center}
+.donut::after{content:"";position:absolute;inset:26px;background:var(--panel);border-radius:50%}
+.donut .mid{position:relative;z-index:1;text-align:center}
+.donut .mid b{display:block;font-size:24px;letter-spacing:-1px}
+.donut .mid span{font-size:11.5px;color:var(--muted)}
+.lgd{display:grid;gap:8px;flex:1;min-width:170px}
+.lgd .li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.lgd .li i{width:11px;height:11px;border-radius:3px;flex:none}
+.lgd .li b{margin-left:auto;font-variant-numeric:tabular-nums}
+.bars{display:grid;gap:11px}
+.bar-row{display:grid;grid-template-columns:96px 1fr 42px;align-items:center;gap:11px;font-size:13px}
+.bar-track{height:11px;background:var(--panel-2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#3b82f6,#2563eb);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.bar-row b{text-align:right;font-variant-numeric:tabular-nums}
+.trend{display:flex;align-items:flex-end;gap:7px;height:150px;padding-top:8px}
+.trend .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.trend .bar{width:100%;max-width:38px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#60a5fa,#2563eb);min-height:4px;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.trend .lb{font-size:11px;color:var(--muted);white-space:nowrap}
+.trend .vn{font-size:11px;font-weight:700}
+
+/* ---------- 상세 ---------- */
+.detail-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;align-items:start}
+.photo-box{border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--panel-2)}
+.photo-box img{width:100%;max-height:430px;object-fit:contain;background:#0f172a12}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:9px 12px;font-size:14px}
+.kv dt{color:var(--muted);font-size:13px;font-weight:600}
+.kv dd{margin:0;font-weight:600}
+.timeline{display:grid;gap:0;position:relative;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:10px;width:2px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 16px}
+.tl-item::before{content:"";position:absolute;left:-22px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 0 0 2px var(--brand-soft)}
+.tl-item.done::before{background:var(--ok);box-shadow:0 0 0 2px #dcfce7}
+.tl-item .tt{font-weight:700;font-size:13.5px}
+.tl-item .dt{font-size:12px;color:var(--muted)}
+.tl-item .tx{font-size:13px;margin-top:3px;color:#374151;white-space:pre-wrap}
+
+/* ---------- AI 패널 ---------- */
+.ai-panel{
+  border:1px solid #c7d7fb;border-radius:var(--radius);padding:15px;
+  background:linear-gradient(135deg,#f0f6ff,#eefaff)
+}
+.ai-panel .hd{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--brand-d);margin-bottom:4px}
+.ai-res{display:grid;gap:10px;margin-top:12px}
+.ai-res .line{display:flex;align-items:center;gap:9px;font-size:13.5px;flex-wrap:wrap}
+.ai-res .line > span:first-child{color:var(--muted);font-weight:600;width:74px;flex:none}
+.thinking{display:inline-flex;gap:4px;align-items:center}
+.thinking i{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:bnc 1.2s infinite}
+.thinking i:nth-child(2){animation-delay:.15s}
+.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes bnc{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+/* ---------- 업로드 ---------- */
+.drop{
+  border:2px dashed #c7d2e5;border-radius:var(--radius);padding:26px;text-align:center;
+  background:var(--panel-2);transition:.15s;cursor:pointer
+}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.drop .ico{font-size:32px}
+.preview{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+.preview img{width:100%;max-height:290px;object-fit:cover}
+.preview .rm{position:absolute;top:9px;right:9px;background:rgba(15,23,42,.72);color:#fff;border:0;border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:700}
+
+/* ---------- 하단 탭(모바일) ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding:7px 6px calc(7px + env(safe-area-inset-bottom))
+}
+.tabbar .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:12px;font-size:11px;font-weight:700;color:var(--muted)}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--brand-d);background:var(--brand-soft)}
+
+/* ---------- 토스트 / 모달 ---------- */
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:200;display:grid;gap:8px;width:calc(100% - 32px);max-width:400px}
+.toast{
+  background:#111827;color:#fff;padding:12px 15px;border-radius:12px;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow-lg);animation:tin .25s ease;display:flex;gap:9px;align-items:center
+}
+.toast.ok{background:#15803d}.toast.err{background:#b91c1c}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150;display:grid;place-items:center;padding:18px;animation:fin .18s}
+@keyframes fin{from{opacity:0}}
+.modal{background:var(--panel);border-radius:20px;max-width:420px;width:100%;padding:22px;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:18px;margin-bottom:8px}
+
+/* ---------- 시작 화면(랜딩) ---------- */
+.start-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:
+    radial-gradient(700px 420px at 15% 8%, rgba(255,255,255,.16), transparent 60%),
+    radial-gradient(600px 380px at 90% 90%, rgba(255,255,255,.12), transparent 60%),
+    linear-gradient(135deg,#1d4ed8,#2563eb 45%,#0891b2)
+}
+.start-card{
+  width:100%;max-width:420px;background:var(--panel);border-radius:24px;padding:34px 28px;
+  box-shadow:0 24px 60px rgba(15,23,42,.35);text-align:center;animation:fin .22s ease
+}
+.start-thumb{
+  width:104px;height:104px;margin:0 auto 18px;border-radius:28px;display:grid;place-items:center;
+  font-size:52px;background:linear-gradient(135deg,#2563eb,#22c1dc);box-shadow:0 14px 30px rgba(37,99,235,.35)
+}
+.start-card h1{font-size:23px;letter-spacing:-.6px;margin-bottom:8px}
+.start-card p{color:var(--muted);font-size:13.5px;line-height:1.7;margin:0}
+.start-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:16px}
+.start-logo{font-size:30px;margin-bottom:6px}
+.start-roles{display:grid;gap:11px;margin-top:20px}
+.start-role{
+  display:flex;align-items:center;gap:13px;padding:14px 15px;border-radius:16px;border:1.5px solid var(--line);
+  background:var(--panel-2);text-align:left;transition:.15s
+}
+.start-role:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-1px)}
+.start-role .ic{font-size:26px;flex:none;width:40px;text-align:center}
+.start-role .tt{font-weight:800;font-size:14.5px;display:block}
+.start-role .sub{font-weight:500;font-size:12px;color:var(--muted);display:block;margin-top:1px}
+@media(max-width:480px){ .start-card{padding:28px 20px} }
+
+.filters{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:9px}
+.table-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:760px}
+table.tbl th{text-align:left;font-size:12px;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--panel-2)}
+table.tbl td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl tbody tr:hover{background:var(--panel-2)}
+.tbl .ttl{font-weight:700;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media(max-width:900px){
+  .detail-grid{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr 1fr}
+}
+@media(max-width:680px){
+  main{padding:16px 13px 96px}
+  .navtabs{display:none}
+  .tabbar{display:block}
+  .who .nm,.who .rl{display:none}
+  .modesw button{padding:6px 9px;font-size:12px}
+  .page-head h2{font-size:19px}
+  .stats{grid-template-columns:1fr 1fr}
+  .bar-row{grid-template-columns:74px 1fr 34px;font-size:12.5px}
+  .map-frame{aspect-ratio:4/5;min-height:420px}
+  .admin-only-tabbar{display:none}
+}
+@media print{
+  .topbar,.tabbar,.no-print{display:none!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toasts"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ==========================================================================
+   0. 상수 · 마스터 데이터
+   ========================================================================== */
+const STORE_KEY = 'safeschool_ai_v2';
+const MODE_KEY  = 'safeschool_mode_v1';
+const NICK_KEY  = 'safeschool_nick_v1';   /* 학생 닉네임 */
+const UID_KEY   = 'safeschool_uid_v1';    /* 내 신고 구분용 내부 식별자 (화면에 노출되지 않음) */
+const PW_KEY    = 'safeschool_pw_v1';     /* 관리자 암호 */
+const DEFAULT_PW = '0000';                /* 기본 관리자 암호 */
+
+/* Google Sheets 연동 — Apps Script 웹앱 배포 후 아래 URL을 교체하세요.
+   (배포 방법은 함께 제공된 google-apps-script.gs 파일 상단 안내 참고) */
+const SHEETS_WEBHOOK_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+/* 로그인 없이 사용 — 학생은 닉네임, 관리자는 암호로 구분 */
+const USERS = {
+  student: () => ({ id: deviceId(), name: nickname, role: 'student' }),
+  admin:   () => ({ id: 'admin',    name: '선생님',  role: 'admin'   })
+};
+
+const STATUSES = ['접수', '확인', '처리중', '처리완료', '반려'];
+const SEVERITY = {
+  1: { name: '낮음', desc: '불편하지만 즉시 위험하지 않음', color: 'var(--sev-1)' },
+  2: { name: '보통', desc: '방치 시 사고 가능성 있음',      color: 'var(--sev-2)' },
+  3: { name: '높음', desc: '부상 위험이 있어 빠른 조치 필요', color: 'var(--sev-3)' },
+  4: { name: '긴급', desc: '중대 사고 우려, 즉시 조치 필요',  color: 'var(--sev-4)' }
+};
+
+/* 신고 유형 → 담당 부서 매핑 */
+const TYPES = [
+  { key: '시설파손',   icon: '🪑', dept: '시설관리부', desc: '책상·의자·문·창문 등 파손' },
+  { key: '바닥/계단',  icon: '🪜', dept: '시설관리부', desc: '미끄러움, 깨진 계단, 턱' },
+  { key: '전기/조명',  icon: '💡', dept: '전기안전담당', desc: '고장난 조명, 노출 전선' },
+  { key: '화장실',     icon: '🚻', dept: '환경위생부', desc: '누수, 변기·세면대 고장' },
+  { key: '운동장/체육', icon: '⚽', dept: '체육부',     desc: '운동장 시설물 파손' },
+  { key: '통행방해',   icon: '🚧', dept: '학생안전부', desc: '복도·비상구를 막는 물건' },
+  { key: '위생/청결',  icon: '🧹', dept: '환경위생부', desc: '악취, 오염, 해충' },
+  { key: '기타',       icon: '📌', dept: '학생안전부', desc: '그 밖의 위험 요소' }
+];
+
+/* 학교 안전지도 구역 (x/y/w/h = %) */
+const ZONES = [
+  { key: '본관',     icon: '🏫', x: 4,  y: 5,  w: 30, h: 40 },
+  { key: '별관',     icon: '🏢', x: 37, y: 5,  w: 21, h: 25 },
+  { key: '과학실습동', icon: '🔬', x: 61, y: 5,  w: 22, h: 25 },
+  { key: '급식실',   icon: '🍚', x: 86, y: 5,  w: 10, h: 25 },
+  { key: '체육관',   icon: '🏀', x: 37, y: 33, w: 27, h: 22 },
+  { key: '도서관',   icon: '📚', x: 67, y: 33, w: 29, h: 22 },
+  { key: '운동장',   icon: '🏃', x: 4,  y: 58, w: 56, h: 30 },
+  { key: '주차장',   icon: '🅿️', x: 63, y: 58, w: 16, h: 30 },
+  { key: '기숙사',   icon: '🛏️', x: 82, y: 58, w: 14, h: 30 },
+  { key: '정문/통학로', icon: '🚪', x: 4,  y: 91, w: 92, h: 7 }
+];
+
+/* AI 분석 규칙: 키워드 → 유형 / 위험도 가중치 */
+const TYPE_RULES = [
+  { type: '바닥/계단', kw: ['계단','바닥','미끄','물기','타일','턱','넘어','미끄러','빙판','파인','금이','갈라'] },
+  { type: '전기/조명', kw: ['조명','전등','형광등','전기','콘센트','전선','누전','스파크','감전','불이 꺼','깜빡'] },
+  { type: '화장실',   kw: ['화장실','변기','세면대','수도','누수','물이 새','배수','악취','휴지'] },
+  { type: '운동장/체육', kw: ['운동장','축구','골대','농구','철봉','스탠드','트랙','체육관','매트','평행봉'] },
+  { type: '통행방해', kw: ['통행','복도','비상구','막혀','적재','쌓여','대피','소화전','비상계단','자전거'] },
+  { type: '위생/청결', kw: ['쓰레기','벌레','곰팡이','냄새','오염','청소','해충','먼지'] },
+  { type: '시설파손', kw: ['책상','의자','파손','부서','깨졌','깨진','문고리','창문','사물함','칠판','손잡이','고장'] }
+];
+const RISK_UP = [
+  { kw: ['감전','누전','화재','불꽃','스파크','붕괴','추락','떨어질','유리','칼날','날카','피가','다쳤','부상','넘어져','깨진 유리','가스'], w: 2 },
+  { kw: ['위험','급함','긴급','빨리','심각','크게','많이','계속','반복','아이들','저학년','매일'], w: 1 },
+  { kw: ['비상구','소화전','대피','전선','노출','흔들','기울','금이','균열','깊'], w: 1 }
+];
+const RISK_DOWN = [{ kw: ['살짝','약간','조금','경미','오래된','불편','미관','작은'], w: 1 }];
+const HIGH_TRAFFIC = ['본관', '계단', '복도', '급식실', '체육관', '정문/통학로'];
+
+/* ==========================================================================
+   1. 저장소 (localStorage)
+   ========================================================================== */
+const DB = {
+  data: null,
+  load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      this.data = raw ? JSON.parse(raw) : null;
+    } catch (e) { this.data = null; }
+    if (!this.data || !Array.isArray(this.data.reports)) this.data = seedData();
+    this.migrate();
+    return this.data;
+  },
+  /* 예전 버전에서 학번(20301)으로 저장된 신고를 현재 식별자로 옮깁니다. */
+  migrate() {
+    let changed = false;
+    this.data.reports.forEach(r => {
+      if (r.reporter && (r.reporter.id === '20301' || r.reporter.id === 'T1024')) {
+        r.reporter.id = deviceId();
+        changed = true;
+      }
+    });
+    if (changed) this.save();
+  },
+  save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(this.data));
+      return true;
+    } catch (e) {
+      toast('저장 공간이 가득 찼습니다. 오래된 신고의 사진을 삭제해 주세요.', 'err');
+      return false;
+    }
+  },
+  reports() { return this.data.reports; },
+  find(id) { return this.data.reports.find(r => r.id === id); },
+  nextId() { return 'R' + String(++this.data.seq).padStart(4, '0'); }
+};
+
+function seedData() {
+  return { seq: 0, reports: [] };
+}
+
+/* ==========================================================================
+   1-1. Google Sheets 연동 (신고 접수 시 시트에 기록)
+   ========================================================================== */
+function sendToGoogleSheet(rep) {
+  if (!SHEETS_WEBHOOK_URL || SHEETS_WEBHOOK_URL.indexOf('YOUR_') === 0) return; /* 배포 전이면 전송 생략 */
+  const payload = {
+    id: rep.id,
+    title: rep.title,
+    type: rep.type,
+    zone: rep.zone,
+    spot: rep.spot || '',
+    desc: rep.desc,
+    severity: SEVERITY[rep.severity] ? SEVERITY[rep.severity].name : rep.severity,
+    dept: rep.dept,
+    status: rep.status,
+    summary: rep.summary,
+    reporter: '학생',
+    createdAt: fmtDate(rep.createdAt)
+  };
+  /* Apps Script 웹앱은 CORS 프리플라이트를 처리하지 않으므로
+     text/plain + no-cors 조합으로 전송합니다 (응답은 읽지 않음). */
+  fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(() => { /* 네트워크 오류가 있어도 로컬 저장은 이미 완료된 상태입니다 */ });
+}
+
+/* ==========================================================================
+   2. 사용자 (로그인 없음 — 학생 닉네임 / 관리자 암호)
+   ========================================================================== */
+let nickname = '익명';
+let session = null;
+
+/* 내 신고를 구분하기 위한 내부 식별자 — 학번이 아니며 화면에 표시하지 않습니다. */
+function deviceId() {
+  let v = localStorage.getItem(UID_KEY);
+  if (!v) {
+    v = 'U' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem(UID_KEY, v);
+  }
+  return v;
+}
+/* --- 닉네임 --- */
+function loadNickname() {
+  const v = (localStorage.getItem(NICK_KEY) || '').trim();
+  nickname = v || '익명';
+  return nickname;
+}
+function saveNickname(v) {
+  nickname = String(v == null ? '' : v).trim().slice(0, 12) || '익명';
+  localStorage.setItem(NICK_KEY, nickname);
+  if (session && session.role === 'student') session.name = nickname;
+  return nickname;
+}
+/* --- 관리자 암호 --- */
+function getPassword() { return localStorage.getItem(PW_KEY) || DEFAULT_PW; }
+function setPassword(v) { localStorage.setItem(PW_KEY, String(v)); }
+function checkPassword(v) { return String(v) === getPassword(); }
+
+/* --- 모드 ---
+   관리자 모드는 sessionStorage에만 저장합니다. 탭을 닫으면 해제되어
+   다시 들어올 때 암호를 입력해야 합니다. */
+function modeStore() {
+  try { return window.sessionStorage; } catch (e) { return null; }
+}
+function loadMode() {
+  loadNickname();
+  const st = modeStore();
+  const m = st ? st.getItem(MODE_KEY) : null;
+  session = (USERS[m] || USERS.student)();
+  return session;
+}
+function setMode(m) {
+  if (!USERS[m]) return;
+  session = USERS[m]();
+  const st = modeStore();
+  if (st) st.setItem(MODE_KEY, m);
+  location.hash = m === 'admin' ? '#/admin' : '#/home';
+  render();
+}
+const isAdmin = () => session.role === 'admin';
+
+/* ==========================================================================
+   3. 유틸
+   ========================================================================== */
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear() + '.' + p(d.getMonth()+1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function ago(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return '방금 전';
+  if (s < 3600) return Math.floor(s/60) + '분 전';
+  if (s < 86400) return Math.floor(s/3600) + '시간 전';
+  if (s < 86400*7) return Math.floor(s/86400) + '일 전';
+  return fmtDate(ts).slice(0,10);
+}
+function typeInfo(k) { return TYPES.find(t => t.key === k) || TYPES[TYPES.length-1]; }
+function toast(msg, kind) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || '');
+  el.innerHTML = (kind === 'ok' ? '✅ ' : kind === 'err' ? '⚠️ ' : 'ℹ️ ') + esc(msg);
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.transition = '.25s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 260); }, 2600);
+}
+function confirmModal(title, body, okText, onOk) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML =
+    '<div class="modal-bg" data-close="1"><div class="modal">' +
+      '<h3>' + esc(title) + '</h3>' +
+      '<p class="muted small" style="margin:6px 0 18px">' + esc(body) + '</p>' +
+      '<div class="row" style="justify-content:flex-end">' +
+        '<button class="btn" data-close="1">취소</button>' +
+        '<button class="btn danger" id="mk-ok">' + esc(okText) + '</button>' +
+      '</div></div></div>';
+  root.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', e => {
+    if (e.target === n) root.innerHTML = '';
+  }));
+  root.querySelector('#mk-ok').addEventListener('click', () => { root.innerHTML = ''; onOk(); });
+}
+/* 입력형 모달 — 닉네임 변경 / 관리자 암호 확인에 사용 */
+function inputModal(opt) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML =
+    '<div class="modal-bg" data-close="1"><div class="modal">' +
+      '<h3>' + esc(opt.title) + '</h3>' +
+      '<p class="muted small" style="margin:6px 0 14px">' + esc(opt.body || '') + '</p>' +
+      '<form id="mk-form"><input class="input" id="mk-input" type="' + (opt.type || 'text') + '" ' +
+        (opt.type === 'password' ? 'inputmode="numeric" ' : '') +
+        'maxlength="' + (opt.maxlength || 20) + '" placeholder="' + esc(opt.placeholder || '') + '" ' +
+        'value="' + esc(opt.value || '') + '" autocomplete="off">' +
+      '<div class="small" id="mk-err" style="color:var(--danger);font-weight:700;margin-top:8px;display:none"></div>' +
+      '<div class="row" style="justify-content:flex-end;margin-top:16px">' +
+        '<button type="button" class="btn" data-close="1">취소</button>' +
+        '<button type="submit" class="btn primary">' + esc(opt.okText || '확인') + '</button>' +
+      '</div></form></div></div>';
+  const close = () => { root.innerHTML = ''; };
+  root.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', e => {
+    if (e.target === n) close();
+  }));
+  const input = root.querySelector('#mk-input');
+  const err = root.querySelector('#mk-err');
+  input.focus(); input.select();
+  root.querySelector('#mk-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value;
+    const msg = opt.validate ? opt.validate(v) : null;
+    if (msg) { err.textContent = msg; err.style.display = 'block'; input.select(); return; }
+    close();
+    opt.onOk(v);
+  });
+}
+/* 사진 리사이즈 — localStorage 용량 초과 방지 */
+function compressImage(file, maxSide, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('이미지 형식이 아닙니다'));
+      img.onload = () => {
+        let { width: w, height: h } = img;
+        const scale = Math.min(1, maxSide / Math.max(w, h));
+        w = Math.round(w * scale); h = Math.round(h * scale);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(cv.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ==========================================================================
+   4. AI 분석 엔진 (오프라인 규칙 기반 — 외부 API 불필요)
+   ========================================================================== */
+const AI = {
+  analyze(input) {
+    const text = ((input.title || '') + ' ' + (input.desc || '')).toLowerCase();
+    const raw = (input.title || '') + ' ' + (input.desc || '');
+
+    /* --- 유형 추론 --- */
+    let best = { type: null, score: 0 };
+    const scores = {};
+    TYPE_RULES.forEach(rule => {
+      let s = 0;
+      rule.kw.forEach(k => { if (text.includes(k)) s += 1; });
+      scores[rule.type] = s;
+      if (s > best.score) best = { type: rule.type, score: s };
+    });
+    const type = best.type || (input.type && input.type !== '기타' ? input.type : '기타');
+
+    /* --- 위험도 산출 --- */
+    let risk = 2;
+    const hits = [];
+    RISK_UP.forEach(g => g.kw.forEach(k => {
+      if (text.includes(k)) { risk += g.w; hits.push(k); }
+    }));
+    RISK_DOWN.forEach(g => g.kw.forEach(k => {
+      if (text.includes(k)) { risk -= g.w; }
+    }));
+    if (type === '전기/조명' && /감전|누전|전선|스파크/.test(text)) risk += 1;
+    if (type === '통행방해' && /비상구|대피|소화전/.test(text)) risk += 1;
+    if (HIGH_TRAFFIC.includes(input.zone) || HIGH_TRAFFIC.some(z => (input.spot||'').includes(z))) risk += 0.5;
+    if (raw.length < 15) risk -= 0.5;
+    const severity = Math.max(1, Math.min(4, Math.round(risk)));
+
+    /* --- 요약 생성 --- */
+    const place = [input.zone, input.spot].filter(Boolean).join(' ');
+    const core = this.core(raw) || (input.title || '안전 위험 요소');
+    const risky = {
+      1: '경미한 불편이 확인됨',
+      2: '방치 시 사고로 이어질 수 있음',
+      3: '부상 위험이 있어 빠른 조치가 필요함',
+      4: '중대 사고 우려가 있어 즉시 조치가 필요함'
+    }[severity];
+    const summary = (place ? place + '에서 ' : '') + core + ' — ' + risky;
+
+    /* --- 신뢰도 --- */
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    let conf = 0.45 + Math.min(0.35, best.score * 0.12) + Math.min(0.15, raw.length / 400);
+    if (total > 0 && best.score / total > 0.6) conf += 0.05;
+    conf = Math.min(0.97, conf);
+
+    return {
+      type,
+      dept: typeInfo(type).dept,
+      severity,
+      summary: summary.length > 90 ? summary.slice(0, 88) + '…' : summary,
+      confidence: Math.round(conf * 100) / 100,
+      keywords: [...new Set(hits)].slice(0, 5)
+    };
+  },
+  /* 문장에서 핵심 구절 뽑기 */
+  core(raw) {
+    const s = raw.replace(/\s+/g, ' ').trim();
+    if (!s) return '';
+    const sentences = s.split(/[.!?\n]|습니다|해요|이에요|입니다/).map(x => x.trim()).filter(x => x.length > 4);
+    let pick = sentences[0] || s;
+    if (pick.length > 46) pick = pick.slice(0, 44) + '…';
+    return pick;
+  }
+};
+
+/* ==========================================================================
+   5. 집계 헬퍼
+   ========================================================================== */
+function myReports() {
+  return DB.reports().filter(r => r.reporter.id === session.id)
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+function zoneStat(zoneKey, list) {
+  const rs = (list || DB.reports()).filter(r => r.zone === zoneKey && r.status !== '반려');
+  const open = rs.filter(r => r.status !== '처리완료');
+  const lv = open.length ? Math.max(...open.map(r => r.severity)) : 0;
+  return { total: rs.length, open: open.length, level: lv };
+}
+function countBy(list, fn) {
+  const m = {};
+  list.forEach(r => { const k = fn(r); m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+function avgResolveHours() {
+  const done = DB.reports().filter(r => r.status === '처리완료');
+  if (!done.length) return null;
+  const sum = done.reduce((a, r) => a + (r.updatedAt - r.createdAt), 0);
+  return Math.round(sum / done.length / 3600000);
+}
+
+/* ==========================================================================
+   6. 공통 UI 조각
+   ========================================================================== */
+function statusBadge(st) {
+  return '<span class="badge s-' + esc(st) + '"><i class="dot"></i>' + esc(st) + '</span>';
+}
+function sevBadge(lv) {
+  return '<span class="badge v-' + lv + '">위험도 ' + esc(SEVERITY[lv].name) + '</span>';
+}
+function reportItem(r) {
+  const t = typeInfo(r.type);
+  const thumb = r.photo
+    ? '<img class="thumb" src="' + r.photo + '" alt="신고 사진">'
+    : '<div class="thumb">' + t.icon + '</div>';
+  return '<button class="ritem" data-open="' + r.id + '">' +
+    '<div class="sev-bar" style="background:' + SEVERITY[r.severity].color + '"></div>' +
+    thumb +
+    '<div class="body">' +
+      '<div class="tt">' + esc(r.title) + '</div>' +
+      '<div class="bd">' + statusBadge(r.status) + sevBadge(r.severity) +
+        '<span class="tag">' + t.icon + ' ' + esc(r.type) + '</span></div>' +
+      '<div class="mt"><span>📍 ' + esc(r.zone) + (r.spot ? ' · ' + esc(r.spot) : '') + '</span>' +
+        '<span>🕒 ' + ago(r.createdAt) + '</span>' +
+        '<span>🏷️ ' + esc(r.id) + '</span></div>' +
+    '</div></button>';
+}
+function emptyBox(icon, title, sub, btn) {
+  return '<div class="empty"><div class="ico">' + icon + '</div>' +
+    '<div style="font-weight:700;color:var(--text)">' + esc(title) + '</div>' +
+    '<div class="small" style="margin-top:4px">' + esc(sub) + '</div>' +
+    (btn || '') + '</div>';
+}
+
+/* ==========================================================================
+   7. 화면 — 학생 메인
+   ========================================================================== */
+function viewHome() {
+  const mine = myReports();
+  const openCnt = mine.filter(r => r.status !== '처리완료' && r.status !== '반려').length;
+  const doneCnt = mine.filter(r => r.status === '처리완료').length;
+  const all = DB.reports();
+  const urgent = all.filter(r => r.severity >= 3 && r.status !== '처리완료' && r.status !== '반려')
+    .sort((a, b) => b.severity - a.severity || b.createdAt - a.createdAt).slice(0, 3);
+
+  return '<div class="page-head"><div>' +
+      '<h2>안녕하세요, ' + esc(session.name) + '님 👋</h2>' +
+      '<p>학교에서 위험한 곳을 발견했다면 바로 신고해 주세요.</p></div></div>' +
+
+    '<div class="card pad" style="background:linear-gradient(135deg,#2563eb,#0891b2);border:0;color:#fff;margin-bottom:14px">' +
+      '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">' +
+        '<div style="flex:1;min-width:200px">' +
+          '<div style="font-size:18px;font-weight:800;letter-spacing:-.5px">위험한 곳을 발견했나요?</div>' +
+          '<div style="opacity:.9;font-size:13.5px;margin-top:4px">사진을 찍어 올리면 AI가 위험도와 담당 부서를 자동으로 분류합니다.</div>' +
+        '</div>' +
+        '<a class="btn" href="#/report" style="background:#fff;color:var(--brand-d);border:0">📷 신고하기</a>' +
+      '</div></div>' +
+
+    '<div class="stats" style="margin-bottom:16px">' +
+      '<div class="stat"><div class="lb">📝 내 신고</div><div class="vl">' + mine.length + '</div><div class="sub">총 신고 건수</div></div>' +
+      '<div class="stat"><div class="lb">⏳ 처리 대기</div><div class="vl">' + openCnt + '</div><div class="sub">확인·처리 중</div></div>' +
+      '<div class="stat"><div class="lb">✅ 처리 완료</div><div class="vl">' + doneCnt + '</div><div class="sub">해결된 신고</div></div>' +
+      '<div class="stat"><div class="lb">🏫 전체 신고</div><div class="vl">' + all.length + '</div><div class="sub">우리 학교 누적</div></div>' +
+    '</div>' +
+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">' +
+      '<div class="card pad">' +
+        '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<h3 style="font-size:16px">최근 내 신고</h3><a class="btn ghost sm" href="#/my">전체 보기 →</a></div>' +
+        (mine.length
+          ? '<div class="rlist">' + mine.slice(0, 3).map(reportItem).join('') + '</div>'
+          : emptyBox('📭', '아직 신고 내역이 없어요', '위험 요소를 발견하면 신고해 주세요.',
+              '<a class="btn primary sm" style="margin-top:12px" href="#/report">첫 신고 작성하기</a>')) +
+      '</div>' +
+      '<div class="card pad">' +
+        '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<h3 style="font-size:16px">⚠️ 학교 내 주의 구역</h3><a class="btn ghost sm" href="#/map">안전지도 →</a></div>' +
+        (urgent.length
+          ? '<div class="rlist">' + urgent.map(reportItem).join('') + '</div>'
+          : emptyBox('🎉', '현재 주의 구역이 없습니다', '위험도 높음 이상의 미처리 신고가 없어요.')) +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card pad" style="margin-top:14px">' +
+      '<h3 style="font-size:16px;margin-bottom:10px">이런 것들을 신고할 수 있어요</h3>' +
+      '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">' +
+        TYPES.map(t => '<div style="display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)">' +
+          '<div style="font-size:20px">' + t.icon + '</div><div><div style="font-weight:700;font-size:13.5px">' + esc(t.key) + '</div>' +
+          '<div class="small muted">' + esc(t.desc) + '</div></div></div>').join('') +
+      '</div></div>';
+}
+
+/* ==========================================================================
+   8. 화면 — 신고하기
+   ========================================================================== */
+const draft = { photo: null, type: '', zone: '', ai: null };
+let editId = null;
+function viewReport() {
+  const editing = editId ? DB.find(editId) : null;
+  return '<div class="page-head"><div><h2>' + (editing ? '신고 수정하기' : '안전 문제 신고하기') + '</h2>' +
+      '<p>' + (editing ? '내용을 수정하고 저장하면 AI가 다시 분석해요.' : '사진과 위치를 남겨주시면 담당 선생님이 더 빠르게 확인할 수 있어요.') + '</p></div></div>' +
+
+    '<form id="reportForm"><div class="detail-grid">' +
+      '<div class="card pad">' +
+        '<div class="field"><label>① 사진 <span class="hint">선택 · 위험한 곳을 찍어주세요</span></label>' +
+          '<div id="photoArea">' + photoAreaHTML() + '</div>' +
+          '<input type="file" id="photoInput" accept="image/*" capture="environment" hidden></div>' +
+
+        '<div class="field"><label>② 어떤 문제인가요? <span class="hint">필수</span></label>' +
+          '<div class="chips" id="typeChips">' +
+            TYPES.map(t => '<button type="button" class="chip' + (draft.type === t.key ? ' on' : '') + '" data-type="' + esc(t.key) + '">' +
+              t.icon + ' ' + esc(t.key) + '</button>').join('') +
+          '</div></div>' +
+
+        '<div class="field"><label>③ 어디인가요? <span class="hint">필수</span></label>' +
+          '<div class="chips" id="zoneChips" style="margin-bottom:9px">' +
+            ZONES.map(z => '<button type="button" class="chip' + (draft.zone === z.key ? ' on' : '') + '" data-zone="' + esc(z.key) + '">' +
+              z.icon + ' ' + esc(z.key) + '</button>').join('') +
+          '</div>' +
+          '<input class="input" name="spot" value="' + esc(editing ? (editing.spot || '') : '') + '" placeholder="세부 위치 (예: 3층 여자화장실 앞 계단)"></div>' +
+
+        '<div class="field"><label>④ 제목 <span class="hint">필수</span></label>' +
+          '<input class="input" name="title" required maxlength="60" value="' + esc(editing ? editing.title : '') + '" placeholder="예) 3층 계단 난간이 흔들려요"></div>' +
+
+        '<div class="field" style="margin-bottom:8px"><label>⑤ 자세한 설명 <span class="hint">필수 · 10자 이상</span></label>' +
+          '<textarea class="textarea" name="desc" required minlength="10" placeholder="언제, 어디서, 무엇이 어떻게 위험한지 적어주세요.&#10;예) 계단 난간을 잡으면 크게 흔들립니다. 쉬는 시간에 학생들이 많이 지나가서 위험해 보여요.">' + esc(editing ? editing.desc : '') + '</textarea></div>' +
+
+        '<div class="small muted" style="display:flex;gap:7px;align-items:center">🙈 신고자 이름은 표시되지 않고 항상 <b>‘학생’</b>으로만 접수돼요.</div>' +
+      '</div>' +
+
+      '<div class="grid">' +
+        '<div class="ai-panel" id="aiPanel">' + aiPanelHTML() + '</div>' +
+        '<div class="card pad">' +
+          '<h3 style="font-size:15px;margin-bottom:9px">신고 전 확인해 주세요</h3>' +
+          '<ul class="small muted" style="margin:0;padding-left:17px;line-height:1.9">' +
+            '<li>사람이 다쳤거나 <b>즉시 위험</b>한 상황은 먼저 가까운 선생님께 알려주세요.</li>' +
+            '<li>사진에 친구의 얼굴이 나오지 않게 찍어주세요.</li>' +
+            '<li>장난 신고는 처리 대상에서 제외됩니다.</li>' +
+          '</ul>' +
+          '<div class="divider"></div>' +
+          '<button class="btn primary block" type="submit">' + (editing ? '💾 수정 완료' : '🛡️ 신고 접수하기') + '</button>' +
+          '<a class="btn block ghost" href="' + (editing ? '#/detail/' + editing.id : '#/home') + '" style="margin-top:8px">취소</a>' +
+        '</div>' +
+      '</div>' +
+    '</div></form>';
+}
+function photoAreaHTML() {
+  if (draft.photo) {
+    return '<div class="preview"><img src="' + draft.photo + '" alt="업로드한 사진">' +
+      '<button type="button" class="rm" id="rmPhoto">✕ 사진 삭제</button></div>';
+  }
+  return '<div class="drop" id="drop"><div class="ico">📷</div>' +
+    '<div style="font-weight:700;margin-top:6px">사진 촬영 또는 파일 선택</div>' +
+    '<div class="small muted">여기를 눌러 업로드하거나 이미지를 끌어다 놓으세요</div></div>';
+}
+function aiPanelHTML() {
+  const a = draft.ai;
+  let inner;
+  if (!a) {
+    inner = '<div class="small muted" style="margin-top:10px">제목과 설명을 입력하면 AI가 <b>위험 유형 · 위험도 · 담당 부서 · 요약</b>을 자동으로 추천합니다.</div>' +
+      '<button type="button" class="btn sm block" id="aiRun" style="margin-top:11px">✨ AI 분석 실행</button>';
+  } else if (a === 'loading') {
+    inner = '<div class="row" style="align-items:center;gap:9px;margin-top:12px">' +
+      '<span class="thinking"><i></i><i></i><i></i></span><span class="small muted">신고 내용을 분석하고 있어요…</span></div>';
+  } else {
+    inner = '<div class="ai-res">' +
+      '<div class="line"><span>위험 유형</span><span class="tag">' + typeInfo(a.type).icon + ' ' + esc(a.type) + '</span></div>' +
+      '<div class="line"><span>위험도</span>' + sevBadge(a.severity) +
+        '<span class="small muted">' + esc(SEVERITY[a.severity].desc) + '</span></div>' +
+      '<div class="line"><span>담당 부서</span><span class="tag">🏢 ' + esc(a.dept) + '</span></div>' +
+      '<div class="line" style="align-items:flex-start"><span>내용 요약</span>' +
+        '<span style="flex:1;min-width:150px;font-weight:600">' + esc(a.summary) + '</span></div>' +
+      (a.keywords.length ? '<div class="line"><span>감지 키워드</span><span class="small muted">' +
+        a.keywords.map(k => '#' + esc(k)).join(' ') + '</span></div>' : '') +
+      '<div class="small muted" style="border-top:1px dashed #c7d7fb;padding-top:9px">' +
+        '분석 신뢰도 ' + Math.round(a.confidence * 100) + '% · 최종 판단은 담당 선생님이 확인합니다.</div>' +
+      '<button type="button" class="btn sm block" id="aiRun">🔄 다시 분석</button>' +
+    '</div>';
+  }
+  return '<div class="hd">🤖 AI 자동 분석' +
+    '<span class="tag" style="margin-left:auto;font-size:11px">규칙기반 엔진 · 오프라인</span></div>' + inner;
+}
+function bindReport() {
+  const form = document.getElementById('reportForm');
+
+  /* 사진 */
+  const fileInput = document.getElementById('photoInput');
+  function refreshPhoto() {
+    document.getElementById('photoArea').innerHTML = photoAreaHTML();
+    bindPhotoArea();
+  }
+  async function handleFile(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('이미지 파일만 업로드할 수 있습니다.', 'err'); return; }
+    try {
+      draft.photo = await compressImage(file, 1100, 0.72);
+      refreshPhoto();
+      toast('사진이 첨부되었습니다.', 'ok');
+    } catch (err) { toast(err.message, 'err'); }
+  }
+  function bindPhotoArea() {
+    const drop = document.getElementById('drop');
+    if (drop) {
+      drop.addEventListener('click', () => fileInput.click());
+      ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+      ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+      drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+    }
+    const rm = document.getElementById('rmPhoto');
+    if (rm) rm.addEventListener('click', () => { draft.photo = null; fileInput.value = ''; refreshPhoto(); });
+  }
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  bindPhotoArea();
+
+  /* 칩 선택 */
+  document.getElementById('typeChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-type]'); if (!b) return;
+    draft.type = b.dataset.type;
+    document.querySelectorAll('#typeChips .chip').forEach(c => c.classList.toggle('on', c.dataset.type === draft.type));
+  });
+  document.getElementById('zoneChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-zone]'); if (!b) return;
+    draft.zone = b.dataset.zone;
+    document.querySelectorAll('#zoneChips .chip').forEach(c => c.classList.toggle('on', c.dataset.zone === draft.zone));
+  });
+
+  /* AI 분석 */
+  function refreshAI() {
+    document.getElementById('aiPanel').innerHTML = aiPanelHTML();
+    const btn = document.getElementById('aiRun');
+    if (btn) btn.addEventListener('click', runAI);
+  }
+  function collect() {
+    const fd = new FormData(form);
+    return {
+      title: String(fd.get('title') || '').trim(),
+      desc: String(fd.get('desc') || '').trim(),
+      spot: String(fd.get('spot') || '').trim(),
+      zone: draft.zone, type: draft.type
+    };
+  }
+  function runAI() {
+    const v = collect();
+    if (v.title.length < 2 || v.desc.length < 10) {
+      toast('제목과 설명(10자 이상)을 먼저 입력해 주세요.', 'err');
+      return;
+    }
+    draft.ai = 'loading'; refreshAI();
+    setTimeout(() => { draft.ai = AI.analyze(v); refreshAI(); }, 520);
+  }
+  refreshAI();
+
+  /* 제출 */
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = collect();
+    if (!v.type) { toast('문제 유형을 선택해 주세요.', 'err'); return; }
+    if (!v.zone) { toast('위치를 선택해 주세요.', 'err'); return; }
+    if (v.title.length < 2) { toast('제목을 입력해 주세요.', 'err'); return; }
+    if (v.desc.length < 10) { toast('설명을 10자 이상 입력해 주세요.', 'err'); return; }
+
+    const ai = (draft.ai && draft.ai !== 'loading') ? draft.ai : AI.analyze(v);
+
+    if (editId) {
+      const r = DB.find(editId);
+      if (!r) { toast('신고를 찾을 수 없습니다.', 'err'); editId = null; location.hash = '#/my'; return; }
+      r.title = v.title; r.desc = v.desc; r.type = v.type; r.zone = v.zone; r.spot = v.spot;
+      r.photo = draft.photo;
+      r.severity = ai.severity; r.dept = ai.dept; r.summary = ai.summary; r.aiConfidence = ai.confidence;
+      r.updatedAt = Date.now();
+      if (!DB.save()) return;
+      const savedId = r.id;
+      editId = null; draft.photo = null; draft.type = ''; draft.zone = ''; draft.ai = null;
+      toast('신고 내용을 수정했습니다.', 'ok');
+      location.hash = '#/detail/' + savedId;
+      return;
+    }
+
+    const now = Date.now();
+    const rep = {
+      id: DB.nextId(),
+      title: v.title, desc: v.desc, type: v.type, zone: v.zone, spot: v.spot,
+      photo: draft.photo,
+      severity: ai.severity, dept: ai.dept, summary: ai.summary, aiConfidence: ai.confidence,
+      status: '접수', anonymous: true,
+      reporter: { id: session.id, name: '학생', role: 'student' },
+      createdAt: now, updatedAt: now, comments: []
+    };
+    DB.reports().unshift(rep);
+    if (!DB.save()) { DB.reports().shift(); return; }
+    sendToGoogleSheet(rep);
+    draft.photo = null; draft.type = ''; draft.zone = ''; draft.ai = null;
+    toast('신고가 접수되었습니다. (' + rep.id + ')', 'ok');
+    location.hash = '#/detail/' + rep.id;
+  });
+}
+
+/* ==========================================================================
+   9. 화면 — 내 신고 내역
+   ========================================================================== */
+let myFilter = '전체';
+function viewMy() {
+  const all = myReports();
+  const list = myFilter === '전체' ? all : all.filter(r => r.status === myFilter);
+  const tabs = ['전체'].concat(STATUSES);
+  return '<div class="page-head"><div><h2>내 신고 내역</h2>' +
+      '<p>총 ' + all.length + '건의 신고를 접수했습니다.</p></div>' +
+      '<div class="spacer"></div><a class="btn primary" href="#/report">+ 새 신고</a></div>' +
+    '<div class="chips" style="margin-bottom:14px">' +
+      tabs.map(t => {
+        const n = t === '전체' ? all.length : all.filter(r => r.status === t).length;
+        return '<button class="chip' + (myFilter === t ? ' on' : '') + '" data-myf="' + esc(t) + '">' +
+          esc(t) + ' ' + n + '</button>';
+      }).join('') +
+    '</div>' +
+    (list.length ? '<div class="rlist">' + list.map(reportItem).join('') + '</div>'
+      : emptyBox('📭', '해당하는 신고가 없습니다', '다른 상태를 선택해 보세요.'));
+}
+function bindMy() {
+  document.querySelectorAll('[data-myf]').forEach(b =>
+    b.addEventListener('click', () => { myFilter = b.dataset.myf; render(); }));
+}
+
+/* ==========================================================================
+   10. 화면 — 신고 상세 (학생/관리자 공용)
+   ========================================================================== */
+function viewDetail(id, adminMode) {
+  const r = DB.find(id);
+  if (!r) return emptyBox('🔍', '신고를 찾을 수 없습니다', 'ID: ' + id,
+    '<a class="btn sm" style="margin-top:12px" href="#/home">홈으로</a>');
+  if (!adminMode && r.reporter.id !== session.id && !isAdmin())
+    return emptyBox('🔒', '접근 권한이 없습니다', '본인이 작성한 신고만 볼 수 있습니다.');
+
+  const t = typeInfo(r.type);
+  const back = adminMode ? '#/admin/reports' : '#/my';
+
+  const history = [{ tt: '신고 접수', dt: r.createdAt, tx: '학생이 신고를 등록했습니다.', done: true }]
+    .concat((r.comments || []).map(c => ({
+      tt: c.status ? '상태 변경 → ' + c.status : '담당자 메모',
+      dt: c.at, tx: c.by + ' · ' + c.text, done: c.status === '처리완료'
+    })));
+
+  return '<div class="row no-print" style="align-items:center;margin-bottom:12px">' +
+      '<a class="btn ghost sm" href="' + back + '">← 목록</a>' +
+      '<span class="tag">' + esc(r.id) + '</span><div class="spacer"></div>' +
+      (adminMode ? '<button class="btn danger sm" data-del="' + r.id + '">🗑 삭제</button>' : '') +
+      (!adminMode && r.reporter.id === session.id ?
+        '<button class="btn ghost sm" data-edit="' + r.id + '">✏ 수정</button>' +
+        '<button class="btn danger sm" data-del="' + r.id + '">🗑 삭제</button>' : '') +
+    '</div>' +
+
+    '<div class="detail-grid">' +
+      '<div class="grid">' +
+        (r.photo ? '<div class="photo-box"><img src="' + r.photo + '" alt="신고 현장 사진"></div>' : '') +
+        '<div class="card pad">' +
+          '<div class="row" style="align-items:center;gap:8px;margin-bottom:9px">' +
+            statusBadge(r.status) + sevBadge(r.severity) + '<span class="tag">' + t.icon + ' ' + esc(r.type) + '</span></div>' +
+          '<h2 style="font-size:20px;letter-spacing:-.5px;margin-bottom:6px">' + esc(r.title) + '</h2>' +
+          '<div class="small muted">📍 ' + esc(r.zone) + (r.spot ? ' · ' + esc(r.spot) : '') +
+            ' &nbsp;|&nbsp; 🕒 ' + fmtDate(r.createdAt) + '</div>' +
+          '<div class="divider"></div>' +
+          '<div style="white-space:pre-wrap;line-height:1.75">' + esc(r.desc) + '</div>' +
+          '<div class="ai-panel" style="margin-top:16px">' +
+            '<div class="hd">🤖 AI 분석 결과</div>' +
+            '<div class="ai-res">' +
+              '<div class="line"><span>요약</span><span style="flex:1;min-width:140px;font-weight:600">' + esc(r.summary) + '</span></div>' +
+              '<div class="line"><span>담당 부서</span><span class="tag">🏢 ' + esc(r.dept) + '</span>' +
+                '<span class="small muted">신뢰도 ' + Math.round((r.aiConfidence || .8) * 100) + '%</span></div>' +
+            '</div></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="grid">' +
+        '<div class="card pad">' +
+          '<h3 style="font-size:15px;margin-bottom:12px">신고 정보</h3>' +
+          '<dl class="kv">' +
+            '<dt>신고번호</dt><dd>' + esc(r.id) + '</dd>' +
+            '<dt>신고자</dt><dd>학생</dd>' +
+            '<dt>위치</dt><dd>' + esc(r.zone) + '</dd>' +
+            '<dt>세부위치</dt><dd>' + esc(r.spot || '-') + '</dd>' +
+            '<dt>등록일</dt><dd>' + fmtDate(r.createdAt) + '</dd>' +
+            '<dt>최종수정</dt><dd>' + fmtDate(r.updatedAt) + '</dd>' +
+          '</dl>' +
+        '</div>' +
+
+        (adminMode ? '<div class="card pad no-print">' +
+          '<h3 style="font-size:15px;margin-bottom:12px">처리 관리</h3>' +
+          '<div class="field"><label>진행 상태</label>' +
+            '<select class="select" id="stSel">' +
+              STATUSES.map(s => '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>').join('') +
+            '</select></div>' +
+          '<div class="field"><label>위험도 조정 <span class="hint">AI 추천값 수정 가능</span></label>' +
+            '<select class="select" id="svSel">' +
+              [1,2,3,4].map(v => '<option value="' + v + '"' + (v === r.severity ? ' selected' : '') + '>' +
+                SEVERITY[v].name + ' — ' + SEVERITY[v].desc + '</option>').join('') +
+            '</select></div>' +
+          '<div class="field"><label>담당 부서</label>' +
+            '<select class="select" id="dpSel">' +
+              [...new Set(TYPES.map(t2 => t2.dept))].map(d => '<option' + (d === r.dept ? ' selected' : '') + '>' + d + '</option>').join('') +
+            '</select></div>' +
+          '<div class="field"><label>처리 메모 <span class="hint">신고자에게 표시됩니다</span></label>' +
+            '<textarea class="textarea" id="memo" style="min-height:82px" placeholder="예) 현장 확인 후 업체 점검을 요청했습니다."></textarea></div>' +
+          '<button class="btn primary block" id="saveAdmin">처리 내용 저장</button>' +
+        '</div>' : '') +
+
+        '<div class="card pad">' +
+          '<h3 style="font-size:15px;margin-bottom:14px">처리 진행 상황</h3>' +
+          '<div class="timeline">' +
+            history.map(h => '<div class="tl-item' + (h.done ? ' done' : '') + '">' +
+              '<div class="tt">' + esc(h.tt) + '</div>' +
+              '<div class="dt">' + fmtDate(h.dt) + '</div>' +
+              '<div class="tx">' + esc(h.tx) + '</div></div>').join('') +
+          '</div>' +
+          (r.status === '처리완료'
+            ? '<div class="badge s-처리완료" style="width:100%;justify-content:center;padding:9px">✅ 처리가 완료된 신고입니다</div>'
+            : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+function bindDetail(id, adminMode) {
+  const r = DB.find(id);
+  if (!r) return;
+  const del = document.querySelector('[data-del]');
+  if (del) del.addEventListener('click', () => {
+    confirmModal('신고를 삭제할까요?', esc(r.id) + ' · ' + r.title + ' — 삭제한 신고는 복구할 수 없습니다.', '삭제', () => {
+      DB.data.reports = DB.reports().filter(x => x.id !== id);
+      DB.save();
+      toast('신고를 삭제했습니다.', 'ok');
+      location.hash = adminMode ? '#/admin/reports' : '#/my';
+    });
+  });
+  const edit = document.querySelector('[data-edit]');
+  if (edit) edit.addEventListener('click', () => { location.hash = '#/edit/' + id; });
+  const save = document.getElementById('saveAdmin');
+  if (save) save.addEventListener('click', () => {
+    const st = document.getElementById('stSel').value;
+    const sv = Number(document.getElementById('svSel').value);
+    const dp = document.getElementById('dpSel').value;
+    const memo = document.getElementById('memo').value.trim();
+    const changed = st !== r.status || sv !== r.severity || dp !== r.dept;
+    if (!changed && !memo) { toast('변경한 내용이 없습니다.', 'err'); return; }
+    if (st !== r.status || memo) {
+      r.comments = r.comments || [];
+      r.comments.push({
+        by: session.name,
+        text: memo || '상태를 ' + st + '(으)로 변경했습니다.',
+        at: Date.now(),
+        status: st !== r.status ? st : null
+      });
+    }
+    r.status = st; r.severity = sv; r.dept = dp; r.updatedAt = Date.now();
+    DB.save();
+    toast('처리 내용을 저장했습니다.', 'ok');
+    render();
+  });
+}
+
+/* ==========================================================================
+   11. 화면 — 안전지도
+   ========================================================================== */
+let mapZone = null, mapOnlyOpen = true;
+function viewMap(adminMode) {
+  const base = mapOnlyOpen
+    ? DB.reports().filter(r => r.status !== '처리완료' && r.status !== '반려')
+    : DB.reports();
+  const zones = ZONES.map(z => {
+    const rs = base.filter(r => r.zone === z.key);
+    const lv = rs.length ? Math.max(...rs.map(r => r.severity)) : 0;
+    return { z, cnt: rs.length, lv, list: rs };
+  });
+  const sel = mapZone ? zones.find(x => x.z.key === mapZone) : null;
+  const worst = zones.filter(x => x.cnt > 0).sort((a, b) => b.lv - a.lv || b.cnt - a.cnt).slice(0, 5);
+
+  return '<div class="page-head"><div><h2>학교 안전지도</h2>' +
+      '<p>구역별 위험 신고 현황입니다. 색이 진할수록 위험도가 높습니다.</p></div>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn sm" id="mapToggle">' + (mapOnlyOpen ? '☑ 미처리만 보기' : '☐ 미처리만 보기') + '</button></div>' +
+
+    '<div class="detail-grid">' +
+      '<div class="card pad">' +
+        '<div class="map-frame" id="mapFrame">' +
+          zones.map(x => {
+            const st = 'left:' + x.z.x + '%;top:' + x.z.y + '%;width:' + x.z.w + '%;height:' + x.z.h + '%';
+            return '<div class="zone lv' + x.lv + (mapZone === x.z.key ? ' on' : '') + '" style="' + st + '" data-zone="' + esc(x.z.key) + '">' +
+              '<div class="ico">' + x.z.icon + '</div><div>' + esc(x.z.key) + '</div>' +
+              (x.cnt ? '<div class="cnt">' + x.cnt + '건</div>' : '') + '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="legend">' +
+          '<span><i style="background:#cbd5e1"></i>신고 없음</span>' +
+          '<span><i style="background:var(--sev-1)"></i>낮음</span>' +
+          '<span><i style="background:var(--sev-2)"></i>보통</span>' +
+          '<span><i style="background:var(--sev-3)"></i>높음</span>' +
+          '<span><i style="background:var(--sev-4)"></i>긴급</span>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="grid">' +
+        '<div class="card pad">' +
+          '<h3 style="font-size:15px;margin-bottom:11px">' +
+            (sel ? sel.z.icon + ' ' + esc(sel.z.key) + ' <span class="muted small">' + sel.cnt + '건</span>' : '구역을 선택하세요') + '</h3>' +
+          (sel
+            ? (sel.list.length
+                ? '<div class="rlist">' + sel.list.sort((a,b) => b.severity - a.severity).map(reportItem).join('') + '</div>'
+                : '<div class="small muted">이 구역에는 신고가 없습니다. 안전한 상태예요! 🎉</div>')
+            : '<div class="small muted">지도에서 구역을 누르면 해당 구역의 신고 목록을 볼 수 있습니다.</div>') +
+        '</div>' +
+        '<div class="card pad">' +
+          '<h3 style="font-size:15px;margin-bottom:11px">🔥 주의가 필요한 구역 TOP 5</h3>' +
+          (worst.length
+            ? '<div class="bars">' + worst.map(x => {
+                const max = worst[0].cnt || 1;
+                return '<div class="bar-row"><span>' + x.z.icon + ' ' + esc(x.z.key) + '</span>' +
+                  '<span class="bar-track"><span class="bar-fill" style="width:' + Math.round(x.cnt / max * 100) + '%;background:' +
+                    (SEVERITY[x.lv] ? SEVERITY[x.lv].color : '#94a3b8') + '"></span></span><b>' + x.cnt + '</b></div>';
+              }).join('') + '</div>'
+            : '<div class="small muted">현재 미처리 신고가 없습니다.</div>') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+function bindMap() {
+  const frame = document.getElementById('mapFrame');
+  frame.addEventListener('click', e => {
+    const z = e.target.closest('[data-zone]'); if (!z) return;
+    mapZone = (mapZone === z.dataset.zone) ? null : z.dataset.zone;
+    render();
+  });
+  document.getElementById('mapToggle').addEventListener('click', () => { mapOnlyOpen = !mapOnlyOpen; render(); });
+}
+
+/* ==========================================================================
+   12. 화면 — 관리자 대시보드
+   ========================================================================== */
+function viewAdminDash() {
+  const all = DB.reports();
+  const open = all.filter(r => r.status === '접수' || r.status === '확인');
+  const doing = all.filter(r => r.status === '처리중');
+  const done = all.filter(r => r.status === '처리완료');
+  const urgent = all.filter(r => r.severity === 4 && r.status !== '처리완료' && r.status !== '반려');
+  const week = all.filter(r => r.createdAt > Date.now() - 7 * 86400000);
+  const avg = avgResolveHours();
+  const recent = [...all].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
+  const priority = all.filter(r => r.status !== '처리완료' && r.status !== '반려')
+    .sort((a, b) => b.severity - a.severity || a.createdAt - b.createdAt).slice(0, 5);
+
+  return '<div class="page-head"><div><h2>관리자 대시보드</h2>' +
+      '<p>' + esc(session.name) + ', 현재 처리해야 할 신고는 ' + (open.length + doing.length) + '건입니다.</p></div>' +
+      '<div class="spacer"></div><a class="btn" href="#/admin/reports">신고 관리 →</a></div>' +
+
+    '<div class="stats" style="margin-bottom:16px">' +
+      '<div class="stat accent"><div class="lb">🚨 긴급 미처리</div><div class="vl">' + urgent.length + '</div>' +
+        '<div class="sub">위험도 긴급 · 즉시 조치</div></div>' +
+      '<div class="stat"><div class="lb">📥 신규/확인</div><div class="vl">' + open.length + '</div><div class="sub">접수 · 확인 단계</div></div>' +
+      '<div class="stat"><div class="lb">🔧 처리중</div><div class="vl">' + doing.length + '</div><div class="sub">조치 진행 중</div></div>' +
+      '<div class="stat"><div class="lb">✅ 처리완료</div><div class="vl">' + done.length + '</div>' +
+        '<div class="sub">완료율 ' + (all.length ? Math.round(done.length / all.length * 100) : 0) + '%</div></div>' +
+      '<div class="stat"><div class="lb">🗓 최근 7일</div><div class="vl">' + week.length + '</div><div class="sub">신규 접수</div></div>' +
+      '<div class="stat"><div class="lb">⏱ 평균 처리</div><div class="vl">' + (avg == null ? '-' : avg + 'h') + '</div>' +
+        '<div class="sub">접수 → 완료</div></div>' +
+    '</div>' +
+
+    (urgent.length ? '<div class="card pad" style="border-color:#fecaca;background:#fff5f5;margin-bottom:16px">' +
+      '<div class="row" style="align-items:center;margin-bottom:10px">' +
+        '<h3 style="font-size:16px;color:#b91c1c">🚨 긴급 조치 필요</h3>' +
+        '<span class="badge v-4">' + urgent.length + '건</span></div>' +
+      '<div class="rlist">' + urgent.map(reportItem).join('') + '</div></div>' : '') +
+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">' +
+      '<div class="card pad">' +
+        '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<h3 style="font-size:16px">우선 처리 대기</h3><a class="btn ghost sm" href="#/admin/reports">전체 →</a></div>' +
+        (priority.length ? '<div class="rlist">' + priority.map(reportItem).join('') + '</div>'
+          : emptyBox('🎉', '대기 중인 신고가 없습니다', '모든 신고가 처리되었습니다.')) +
+      '</div>' +
+      '<div class="card pad">' +
+        '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<h3 style="font-size:16px">최근 접수</h3><a class="btn ghost sm" href="#/admin/stats">통계 →</a></div>' +
+        '<div class="rlist">' + recent.map(reportItem).join('') + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    /* --- 관리자 암호 변경 --- */
+    '<div class="card pad" style="margin-top:14px;max-width:520px">' +
+      '<h3 style="font-size:16px;margin-bottom:4px">🔒 관리자 암호 변경</h3>' +
+      '<p class="small muted" style="margin:0 0 14px">관리자 모드로 들어올 때 사용하는 암호입니다. ' +
+        '(기본 암호 ' + DEFAULT_PW + ')</p>' +
+      '<form id="pwChangeForm">' +
+        '<div class="field"><label>현재 암호</label>' +
+          '<input class="input" id="curPw" type="password" autocomplete="off" placeholder="현재 암호"></div>' +
+        '<div class="field"><label>새 암호 <span class="hint">4자 이상 20자 이하</span></label>' +
+          '<input class="input" id="newPw" type="password" maxlength="20" autocomplete="off" placeholder="새 암호"></div>' +
+        '<div class="field"><label>새 암호 확인</label>' +
+          '<input class="input" id="newPw2" type="password" maxlength="20" autocomplete="off" placeholder="새 암호 다시 입력"></div>' +
+        '<button class="btn primary block" type="submit">암호 변경</button>' +
+      '</form>' +
+      '<div class="small muted" style="margin-top:11px">' +
+        '⚠️ 이 암호는 브라우저에만 저장되는 <b>간단한 잠금</b>입니다. 실제 보안이 필요하면 서버 인증이 필요합니다.</div>' +
+    '</div>';
+}
+function bindAdminDash() {
+  const f = document.getElementById('pwChangeForm');
+  if (!f) return;
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const cur = document.getElementById('curPw').value;
+    const np  = document.getElementById('newPw').value;
+    const np2 = document.getElementById('newPw2').value;
+    if (!checkPassword(cur)) { toast('현재 암호가 올바르지 않습니다.', 'err'); return; }
+    if (np.length < 4 || np.length > 20) { toast('새 암호는 4자 이상 20자 이하로 정해주세요.', 'err'); return; }
+    if (np !== np2) { toast('새 암호가 서로 다릅니다.', 'err'); return; }
+    if (np === cur) { toast('현재 암호와 다른 암호를 입력해 주세요.', 'err'); return; }
+    setPassword(np);
+    f.reset();
+    toast('관리자 암호를 변경했습니다.', 'ok');
+  });
+}
+
+/* ==========================================================================
+   13. 화면 — 신고 관리 (관리자)
+   ========================================================================== */
+const af = { q: '', status: '', type: '', sev: '', zone: '', sort: 'new' };
+function filteredReports() {
+  let list = DB.reports().slice();
+  if (af.q) {
+    const q = af.q.toLowerCase();
+    list = list.filter(r => (r.title + r.desc + r.id + r.zone + (r.spot||'') + r.reporter.name).toLowerCase().includes(q));
+  }
+  if (af.status) list = list.filter(r => r.status === af.status);
+  if (af.type)   list = list.filter(r => r.type === af.type);
+  if (af.sev)    list = list.filter(r => r.severity === Number(af.sev));
+  if (af.zone)   list = list.filter(r => r.zone === af.zone);
+  const sorters = {
+    new: (a, b) => b.createdAt - a.createdAt,
+    old: (a, b) => a.createdAt - b.createdAt,
+    sev: (a, b) => b.severity - a.severity || b.createdAt - a.createdAt,
+    upd: (a, b) => b.updatedAt - a.updatedAt
+  };
+  return list.sort(sorters[af.sort]);
+}
+function viewAdminReports() {
+  const list = filteredReports();
+  const opt = (v, cur, label) => '<option value="' + esc(v) + '"' + (cur === v ? ' selected' : '') + '>' + esc(label) + '</option>';
+  return '<div class="page-head"><div><h2>신고 관리</h2>' +
+      '<p>전체 ' + DB.reports().length + '건 중 ' + list.length + '건이 조건에 맞습니다.</p></div>' +
+      '<div class="spacer"></div><button class="btn sm" id="csvBtn">⬇ CSV 내보내기</button></div>' +
+
+    '<div class="card pad" style="margin-bottom:14px">' +
+      '<div class="filters">' +
+        '<input class="input" id="fq" placeholder="🔍 제목·내용·신고번호 검색" value="' + esc(af.q) + '">' +
+        '<select class="select" id="fstatus">' + opt('', af.status, '상태 전체') +
+          STATUSES.map(s => opt(s, af.status, s)).join('') + '</select>' +
+        '<select class="select" id="ftype">' + opt('', af.type, '유형 전체') +
+          TYPES.map(t => opt(t.key, af.type, t.key)).join('') + '</select>' +
+        '<select class="select" id="fsev">' + opt('', af.sev, '위험도 전체') +
+          [4,3,2,1].map(v => opt(String(v), af.sev, SEVERITY[v].name)).join('') + '</select>' +
+        '<select class="select" id="fzone">' + opt('', af.zone, '구역 전체') +
+          ZONES.map(z => opt(z.key, af.zone, z.key)).join('') + '</select>' +
+      '</div>' +
+      '<div class="row" style="margin-top:10px;align-items:center">' +
+        '<span class="small muted">정렬</span>' +
+        ['new:최신순','old:오래된순','sev:위험도순','upd:최근수정순'].map(s => {
+          const [k, l] = s.split(':');
+          return '<button class="chip' + (af.sort === k ? ' on' : '') + '" data-sort="' + k + '">' + l + '</button>';
+        }).join('') +
+        '<div class="spacer"></div><button class="btn ghost sm" id="fReset">필터 초기화</button>' +
+      '</div>' +
+    '</div>' +
+
+    (list.length
+      ? '<div class="card table-wrap"><table class="tbl"><thead><tr>' +
+          '<th>번호</th><th>제목</th><th>유형</th><th>위치</th><th>위험도</th><th>상태</th><th>담당</th><th>접수일</th><th></th>' +
+        '</tr></thead><tbody>' +
+        list.map(r => '<tr>' +
+          '<td class="muted small">' + esc(r.id) + '</td>' +
+          '<td><div class="ttl">' + esc(r.title) + '</div>' +
+            '<div class="small muted">학생</div></td>' +
+          '<td><span class="tag">' + typeInfo(r.type).icon + ' ' + esc(r.type) + '</span></td>' +
+          '<td class="small">' + esc(r.zone) + '<div class="muted">' + esc(r.spot || '-') + '</div></td>' +
+          '<td>' + sevBadge(r.severity) + '</td>' +
+          '<td>' + statusBadge(r.status) + '</td>' +
+          '<td class="small">' + esc(r.dept) + '</td>' +
+          '<td class="small muted">' + fmtDate(r.createdAt).slice(2) + '</td>' +
+          '<td><button class="btn sm" data-open="' + r.id + '">상세</button></td>' +
+        '</tr>').join('') +
+        '</tbody></table></div>'
+      : emptyBox('🔍', '조건에 맞는 신고가 없습니다', '검색어나 필터를 변경해 보세요.'));
+}
+function bindAdminReports() {
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+  const q = document.getElementById('fq');
+  let timer;
+  q.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      af.q = q.value;
+      render();
+      const nq = document.getElementById('fq');
+      if (nq) { nq.focus(); nq.setSelectionRange(nq.value.length, nq.value.length); }
+    }, 260);
+  });
+  on('fstatus','change', e => { af.status = e.target.value; render(); });
+  on('ftype','change',  e => { af.type = e.target.value; render(); });
+  on('fsev','change',   e => { af.sev = e.target.value; render(); });
+  on('fzone','change',  e => { af.zone = e.target.value; render(); });
+  on('fReset','click', () => { Object.assign(af, { q:'', status:'', type:'', sev:'', zone:'', sort:'new' }); render(); });
+  document.querySelectorAll('[data-sort]').forEach(b =>
+    b.addEventListener('click', () => { af.sort = b.dataset.sort; render(); }));
+  on('csvBtn','click', exportCSV);
+}
+function exportCSV() {
+  const rows = [['신고번호','제목','유형','구역','세부위치','위험도','상태','담당부서','신고자','접수일시','최종수정','내용']];
+  filteredReports().forEach(r => rows.push([
+    r.id, r.title, r.type, r.zone, r.spot || '', SEVERITY[r.severity].name, r.status, r.dept,
+    '학생', fmtDate(r.createdAt), fmtDate(r.updatedAt),
+    (r.desc || '').replace(/\s+/g, ' ')
+  ]));
+  const csv = '﻿' + rows.map(cols =>
+    cols.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'safeschool_reports.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV 파일을 내보냈습니다.', 'ok');
+}
+
+/* ==========================================================================
+   14. 화면 — 통계 (관리자)
+   ========================================================================== */
+function viewStats() {
+  const all = DB.reports();
+  if (!all.length) return emptyBox('📊', '통계를 만들 데이터가 없습니다', '신고가 접수되면 통계가 표시됩니다.');
+
+  /* 상태별 도넛 */
+  const stColors = { '접수':'#6366f1','확인':'#0ea5e9','처리중':'#f59e0b','처리완료':'#22c55e','반려':'#94a3b8' };
+  const byStatus = countBy(all, r => r.status);
+  let acc = 0;
+  const segs = STATUSES.filter(s => byStatus[s]).map(s => {
+    const from = acc / all.length * 360;
+    acc += byStatus[s];
+    const to = acc / all.length * 360;
+    return stColors[s] + ' ' + from.toFixed(1) + 'deg ' + to.toFixed(1) + 'deg';
+  }).join(',');
+
+  const byType = countBy(all, r => r.type);
+  const byZone = countBy(all, r => r.zone);
+  const byDept = countBy(all, r => r.dept);
+  const bySev = countBy(all, r => r.severity);
+
+  const bars = (obj, labelFn, max) => {
+    const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, max || 8);
+    const top = entries.length ? entries[0][1] : 1;
+    return '<div class="bars">' + entries.map(([k, v]) =>
+      '<div class="bar-row"><span>' + labelFn(k) + '</span>' +
+      '<span class="bar-track"><span class="bar-fill" style="width:' + Math.round(v / top * 100) + '%"></span></span>' +
+      '<b>' + v + '</b></div>').join('') + '</div>';
+  };
+
+  /* 최근 7일 추이 */
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+    const s = d.getTime(), e = s + 86400000;
+    days.push({ label: (d.getMonth()+1) + '/' + d.getDate(), n: all.filter(r => r.createdAt >= s && r.createdAt < e).length });
+  }
+  const dayMax = Math.max(1, ...days.map(d => d.n));
+  const avg = avgResolveHours();
+  const doneRate = Math.round(all.filter(r => r.status === '처리완료').length / all.length * 100);
+
+  return '<div class="page-head"><div><h2>신고 통계</h2>' +
+      '<p>누적 ' + all.length + '건의 신고를 기준으로 집계했습니다.</p></div>' +
+      '<div class="spacer"></div><button class="btn sm no-print" onclick="window.print()">🖨 인쇄 / PDF</button></div>' +
+
+    '<div class="stats" style="margin-bottom:16px">' +
+      '<div class="stat"><div class="lb">📋 총 신고</div><div class="vl">' + all.length + '</div><div class="sub">누적 접수</div></div>' +
+      '<div class="stat"><div class="lb">✅ 처리 완료율</div><div class="vl">' + doneRate + '%</div><div class="sub">완료 / 전체</div></div>' +
+      '<div class="stat"><div class="lb">⏱ 평균 처리시간</div><div class="vl">' + (avg == null ? '-' : avg + 'h') + '</div><div class="sub">접수 → 완료</div></div>' +
+      '<div class="stat"><div class="lb">🚨 위험도 높음↑</div><div class="vl">' + ((bySev[3]||0) + (bySev[4]||0)) + '</div><div class="sub">높음 + 긴급</div></div>' +
+    '</div>' +
+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">' +
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">처리 상태 분포</h3>' +
+        '<div class="donut-wrap">' +
+          '<div class="donut" style="background:conic-gradient(' + segs + ')">' +
+            '<div class="mid"><b>' + doneRate + '%</b><span>처리 완료</span></div></div>' +
+          '<div class="lgd">' + STATUSES.map(s =>
+            '<div class="li"><i style="background:' + stColors[s] + '"></i>' + s + '<b>' + (byStatus[s] || 0) + '건</b></div>').join('') +
+          '</div></div></div>' +
+
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">최근 7일 접수 추이</h3>' +
+        '<div class="trend">' + days.map(d =>
+          '<div class="col"><span class="vn">' + d.n + '</span>' +
+          '<div class="bar" style="height:' + Math.max(4, d.n / dayMax * 100) + '%"></div>' +
+          '<span class="lb">' + d.label + '</span></div>').join('') + '</div></div>' +
+
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">유형별 신고</h3>' +
+        bars(byType, k => typeInfo(k).icon + ' ' + esc(k)) + '</div>' +
+
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">구역별 신고</h3>' +
+        bars(byZone, k => {
+          const z = ZONES.find(x => x.key === k);
+          return (z ? z.icon + ' ' : '') + esc(k);
+        }) + '</div>' +
+
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">담당 부서별 배정</h3>' +
+        bars(byDept, k => '🏢 ' + esc(k)) + '</div>' +
+
+      '<div class="card pad"><h3 style="font-size:16px;margin-bottom:14px">위험도 분포</h3>' +
+        '<div class="bars">' + [4,3,2,1].map(v => {
+          const n = bySev[v] || 0;
+          const top = Math.max(1, ...Object.values(bySev));
+          return '<div class="bar-row"><span>' + SEVERITY[v].name + '</span>' +
+            '<span class="bar-track"><span class="bar-fill" style="width:' + Math.round(n / top * 100) + '%;background:' + SEVERITY[v].color + '"></span></span>' +
+            '<b>' + n + '</b></div>';
+        }).join('') + '</div></div>' +
+    '</div>';
+}
+
+/* ==========================================================================
+   15. 화면 — 시작(랜딩) : 썸네일 → 시작하기 → 학생/관리자 선택
+   ========================================================================== */
+let startStep = 'intro'; /* 'intro' | 'choose' | 'nick' | 'pw' */
+function viewStart() {
+  /* 학생 — 닉네임 정하기 */
+  if (startStep === 'nick') {
+    return '<div class="start-screen"><div class="start-card">' +
+        '<div class="start-logo">🎒</div>' +
+        '<h1>닉네임을 정해주세요</h1>' +
+        '<p>앱에서 나를 부를 이름이에요.<br>정하지 않으면 <b>‘익명’</b>으로 시작합니다.</p>' +
+        '<form id="nickForm" style="margin-top:18px;text-align:left">' +
+          '<input class="input" id="nickInput" maxlength="12" autocomplete="off" ' +
+            'placeholder="예) 하늘이 (최대 12자)" value="' + esc(nickname === '익명' ? '' : nickname) + '">' +
+          '<div class="small muted" style="margin-top:8px">🙈 신고할 때는 닉네임이 아니라 항상 ‘학생’으로만 접수돼요.</div>' +
+          '<button class="btn primary block" type="submit" style="margin-top:16px">이 닉네임으로 시작하기</button>' +
+          '<button class="btn block" type="button" id="nickSkip" style="margin-top:8px">익명으로 시작하기</button>' +
+        '</form>' +
+        '<button type="button" class="btn ghost" id="startBack" style="margin-top:12px">← 뒤로가기</button>' +
+      '</div></div>';
+  }
+  /* 관리자 — 암호 입력 */
+  if (startStep === 'pw') {
+    return '<div class="start-screen"><div class="start-card">' +
+        '<div class="start-logo">🔒</div>' +
+        '<h1>관리자 암호</h1>' +
+        '<p>관리자 페이지는 암호가 필요해요.<br>암호는 관리자 대시보드에서 바꿀 수 있습니다.</p>' +
+        '<form id="pwForm" style="margin-top:18px;text-align:left">' +
+          '<input class="input" id="pwInput" type="password" inputmode="numeric" maxlength="20" ' +
+            'autocomplete="off" placeholder="암호를 입력하세요">' +
+          '<div class="small" id="pwErr" style="color:var(--danger);font-weight:700;margin-top:8px;display:none"></div>' +
+          '<button class="btn primary block" type="submit" style="margin-top:16px">관리자로 들어가기</button>' +
+        '</form>' +
+        '<button type="button" class="btn ghost" id="startBack" style="margin-top:12px">← 뒤로가기</button>' +
+      '</div></div>';
+  }
+  if (startStep === 'choose') {
+    return '<div class="start-screen"><div class="start-card">' +
+        '<div class="start-logo">🛡️</div>' +
+        '<h1>어떤 모드로 시작할까요?</h1>' +
+        '<p>선택한 모드에 맞는 화면으로 바로 이동해요.</p>' +
+        '<div class="start-roles">' +
+          '<button type="button" class="start-role" data-role="student">' +
+            '<span class="ic">🎒</span><span><span class="tt">학생으로 시작하기</span>' +
+            '<span class="sub">위험 요소를 사진과 함께 신고해요</span></span></button>' +
+          '<button type="button" class="start-role" data-role="admin">' +
+            '<span class="ic">🧑‍🏫</span><span><span class="tt">관리자로 시작하기</span>' +
+            '<span class="sub">신고를 확인하고 처리 상태를 관리해요</span></span></button>' +
+        '</div>' +
+        '<button type="button" class="btn ghost" id="startBack" style="margin-top:16px">← 뒤로가기</button>' +
+      '</div></div>';
+  }
+  return '<div class="start-screen"><div class="start-card">' +
+      '<div class="start-thumb">🛡️</div>' +
+      '<h1>SafeSchool AI</h1>' +
+      '<p>사진 한 장이면 충분해요.<br>AI가 위험 유형·위험도·담당 부서를 자동으로 분류해 드립니다.</p>' +
+      '<div class="start-badges">' +
+        '<span class="tag">📷 사진 신고</span><span class="tag">🤖 AI 자동 분류</span><span class="tag">🗺️ 안전지도</span>' +
+      '</div>' +
+      '<button type="button" class="btn primary block" id="startBtn" style="margin-top:20px">🚀 시작하기</button>' +
+    '</div></div>';
+}
+function renderStart() {
+  document.getElementById('app').innerHTML = viewStart();
+  bindStart();
+}
+function bindStart() {
+  const go = document.getElementById('startBtn');
+  if (go) go.addEventListener('click', () => { startStep = 'choose'; renderStart(); });
+  const back = document.getElementById('startBack');
+  if (back) back.addEventListener('click', () => {
+    startStep = (startStep === 'nick' || startStep === 'pw') ? 'choose' : 'intro';
+    renderStart();
+  });
+  /* 역할 선택 → 학생은 닉네임, 관리자는 암호 단계로 */
+  document.querySelectorAll('.start-role').forEach(el => el.addEventListener('click', () => {
+    startStep = el.dataset.role === 'admin' ? 'pw' : 'nick';
+    renderStart();
+  }));
+
+  /* 닉네임 단계 */
+  const nickForm = document.getElementById('nickForm');
+  if (nickForm) {
+    const enter = v => {
+      const n = saveNickname(v);
+      startStep = 'intro';
+      setMode('student');
+      toast(n === '익명' ? '익명으로 시작합니다.' : n + '님, 환영합니다!', 'ok');
+    };
+    nickForm.addEventListener('submit', e => {
+      e.preventDefault();
+      enter(document.getElementById('nickInput').value);
+    });
+    document.getElementById('nickSkip').addEventListener('click', () => enter(''));
+    document.getElementById('nickInput').focus();
+  }
+
+  /* 관리자 암호 단계 */
+  const pwForm = document.getElementById('pwForm');
+  if (pwForm) {
+    const input = document.getElementById('pwInput');
+    const err = document.getElementById('pwErr');
+    pwForm.addEventListener('submit', e => {
+      e.preventDefault();
+      if (!checkPassword(input.value)) {
+        err.textContent = '암호가 올바르지 않습니다.';
+        err.style.display = 'block';
+        input.value = ''; input.focus();
+        return;
+      }
+      startStep = 'intro';
+      setMode('admin');
+      toast('관리자 모드로 들어왔습니다.', 'ok');
+    });
+    input.focus();
+  }
+}
+
+/* ==========================================================================
+   16. 셸 · 라우터
+   ========================================================================== */
+const STUDENT_NAV = [
+  { href:'#/home',   label:'홈',       ic:'🏠' },
+  { href:'#/report', label:'신고하기', ic:'📷' },
+  { href:'#/my',     label:'내 신고',  ic:'📋' },
+  { href:'#/map',    label:'안전지도', ic:'🗺️' }
+];
+const ADMIN_NAV = [
+  { href:'#/admin',         label:'대시보드', ic:'📊' },
+  { href:'#/admin/reports', label:'신고 관리', ic:'📋' },
+  { href:'#/admin/map',     label:'안전지도', ic:'🗺️' },
+  { href:'#/admin/stats',   label:'통계',     ic:'📈' }
+];
+function shell(inner, route) {
+  const nav = isAdmin() ? ADMIN_NAV : STUDENT_NAV;
+  const active = h => route.startsWith(h.replace('#','')) ||
+    (h === '#/admin' && route === '/admin');
+  const isOn = h => {
+    const p = h.slice(1);
+    if (p === '/admin') return route === '/admin';
+    if (p === '/home')  return route === '/home';
+    if (p === '/my')    return route === '/my' || route.startsWith('/detail');
+    if (p === '/admin/reports') return route.startsWith('/admin/reports') || route.startsWith('/admin/detail');
+    return route.startsWith(p);
+  };
+  return '<div class="app">' +
+    '<header class="topbar"><div class="topbar-in">' +
+      '<a class="logo" href="' + (isAdmin() ? '#/admin' : '#/home') + '">' +
+        '<span class="mark">🛡️</span><span>SafeSchool AI' +
+        '<small>' + (isAdmin() ? '관리자 모드' : '학생 모드') + '</small></span></a>' +
+      '<nav class="navtabs" style="margin-left:14px">' +
+        nav.map(n => '<a href="' + n.href + '" class="' + (isOn(n.href) ? 'on' : '') + '">' + n.ic + ' ' + n.label + '</a>').join('') +
+      '</nav><div class="spacer"></div>' +
+      '<div class="who">' +
+        (isAdmin()
+          ? '<div class="avatar">선</div><div><div class="nm">선생님</div><div class="rl">교사·관리자</div></div>'
+          : '<button class="avatar" id="nickBtn" title="닉네임 바꾸기" style="border:0;cursor:pointer">' +
+              esc(nickname.slice(0, 1)) + '</button>' +
+            '<div><div class="nm">' + esc(nickname) + '</div><div class="rl">학생</div></div>') +
+        '<div class="modesw" id="modeSw" title="사용 모드 전환">' +
+          '<button data-mode="student" class="' + (isAdmin() ? '' : 'on') + '">🎒 학생</button>' +
+          '<button data-mode="admin" class="' + (isAdmin() ? 'on' : '') + '">🧑‍🏫 관리자</button>' +
+        '</div></div>' +
+    '</div></header>' +
+    '<main>' + inner + '</main>' +
+    '<nav class="tabbar"><div class="in">' +
+      nav.map(n => '<a href="' + n.href + '" class="' + (isOn(n.href) ? 'on' : '') + '">' +
+        '<span class="ic">' + n.ic + '</span>' + n.label + '</a>').join('') +
+    '</div></nav></div>';
+}
+
+function route() {
+  const h = location.hash.replace(/^#/, '') || '/';
+  return h;
+}
+function render() {
+  const app = document.getElementById('app');
+  let r = route();
+
+  if (r === '/' || r === '/login') {
+    renderStart();
+    return;
+  }
+  /* 모드 가드 — 관리자 페이지는 관리자 모드에서만 */
+  if (r.startsWith('/admin') && !isAdmin()) {
+    app.innerHTML = shell(emptyBox('🔒', '관리자 전용 페이지입니다', '오른쪽 위에서 관리자 모드로 전환해 주세요.',
+      '<a class="btn sm primary" style="margin-top:12px" href="#/home">학생 홈으로</a>'), r);
+    bindShell();
+    return;
+  }
+  if (isAdmin() && (r === '/report' || r.startsWith('/edit/'))) {
+    toast('신고 작성은 학생 계정에서 가능합니다.', 'err');
+    location.hash = '#/admin'; return;
+  }
+
+  let body = '', after = null;
+  if (r === '/home')            { body = viewHome(); }
+  else if (r === '/report')     { editId = null; body = viewReport(); after = bindReport; }
+  else if (r.startsWith('/edit/')) {
+    const id = r.split('/')[2];
+    const rep = DB.find(id);
+    if (!rep || rep.reporter.id !== session.id) {
+      body = emptyBox('🔒', '수정할 수 없습니다', '본인이 작성한 신고만 수정할 수 있어요.',
+        '<a class="btn sm primary" style="margin-top:12px" href="#/my">내 신고함으로</a>');
+    } else {
+      editId = id;
+      draft.photo = rep.photo; draft.type = rep.type; draft.zone = rep.zone;
+      draft.ai = { type: rep.type, severity: rep.severity, dept: rep.dept, summary: rep.summary,
+        confidence: rep.aiConfidence || .8, keywords: [] };
+      body = viewReport(); after = bindReport;
+    }
+  }
+  else if (r === '/my')         { body = viewMy(); after = bindMy; }
+  else if (r.startsWith('/detail/')) {
+    const id = r.split('/')[2];
+    body = viewDetail(id, false); after = () => bindDetail(id, false);
+  }
+  else if (r === '/map')        { body = viewMap(false); after = bindMap; }
+  else if (r === '/admin')      { body = viewAdminDash(); after = bindAdminDash; }
+  else if (r === '/admin/reports') { body = viewAdminReports(); after = bindAdminReports; }
+  else if (r.startsWith('/admin/detail/')) {
+    const id = r.split('/')[3];
+    body = viewDetail(id, true); after = () => bindDetail(id, true);
+  }
+  else if (r === '/admin/map')  { body = viewMap(true); after = bindMap; }
+  else if (r === '/admin/stats'){ body = viewStats(); }
+  else { body = emptyBox('🧭', '페이지를 찾을 수 없습니다', r,
+    '<a class="btn sm" style="margin-top:12px" href="' + (isAdmin() ? '#/admin' : '#/home') + '">홈으로</a>'); }
+
+  app.innerHTML = shell(body, r);
+  bindShell();
+  if (after) after();
+}
+function bindShell() {
+  const sw = document.getElementById('modeSw');
+  if (sw) sw.addEventListener('click', e => {
+    const b = e.target.closest('[data-mode]'); if (!b) return;
+    const m = b.dataset.mode;
+    if (m === session.role) return;
+    if (m === 'admin') {
+      /* 관리자 전환은 암호 확인 후 */
+      inputModal({
+        title: '관리자 암호', body: '관리자 모드로 전환하려면 암호를 입력하세요.',
+        type: 'password', placeholder: '암호', okText: '전환',
+        validate: v => checkPassword(v) ? null : '암호가 올바르지 않습니다.',
+        onOk: () => { setMode('admin'); toast('관리자 모드로 전환했습니다.', 'ok'); }
+      });
+      return;
+    }
+    setMode('student');
+    toast('학생 모드로 전환했습니다.', 'ok');
+  });
+  /* 닉네임 바꾸기 */
+  const nb = document.getElementById('nickBtn');
+  if (nb) nb.addEventListener('click', () => {
+    inputModal({
+      title: '닉네임 바꾸기', body: '비워두면 ‘익명’으로 저장됩니다. (최대 12자)',
+      value: nickname === '익명' ? '' : nickname, placeholder: '예) 하늘이',
+      maxlength: 12, okText: '저장',
+      onOk: v => { const n = saveNickname(v); render(); toast('닉네임을 ‘' + n + '’(으)로 바꿨습니다.', 'ok'); }
+    });
+  });
+  /* 신고 카드 → 상세 이동 (학생/관리자 경로 분기) */
+  document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.open;
+    location.hash = (isAdmin() ? '#/admin/detail/' : '#/detail/') + id;
+  }));
+}
+
+/* ==========================================================================
+   17. 앱 부팅
+   ========================================================================== */
+DB.load();
+loadMode();
+window.addEventListener('hashchange', () => { window.scrollTo(0, 0); render(); });
+render();
+</script>
+</body>
+</html>
